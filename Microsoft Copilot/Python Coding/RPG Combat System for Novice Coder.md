@@ -139,7 +139,7 @@ So in Cycle 4, Character B takes 2 actions and carries no leftover action points
 
 --------
 
-###Note: We've confirmed the model's reasoning chain. Now we'll iterate through our complicated prompt to the desired result.
+### Note: We've confirmed the model's reasoning chain. Now we'll iterate through our complicated prompt to the desired result.
 
 --------
 
