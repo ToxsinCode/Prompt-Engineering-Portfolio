@@ -1,5 +1,4 @@
-### **Note**: Before we begin, I'd like to preface that this particular task was proving very difficult for some other models (especially Gemini). Specifically, the models seemed to struggle with either the **math** or **memory** required to correctly track when simulated characters would get an extra turn. I kept this in mind
-
+### Note: Before we begin, I would like to highlight that this task has presented considerable challenges for some models, particularly Gemini. These models have struggled with the calculations and memory management necessary to accurately determine when simulated characters earn an extra turn. I took this into account during the process.
 --------
 
 **You:**
