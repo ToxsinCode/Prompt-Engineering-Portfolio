@@ -402,7 +402,7 @@ This update ensures that only the segments with actions are printed, keeping the
 
 --------
 
-###Note: This was not the desired effect. The terminal output was cluttered, showing the results of all 100 segments individually.
+### Note: This was not the desired effect. The terminal output was cluttered, showing the results of all 100 segments individually.
 
 --------
 
