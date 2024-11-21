@@ -171,70 +171,72 @@ Excellent! Seems like you have it all down. I've actually been working on the co
 
 Solid foundation! I've got a few tweaks to help streamline and clarify your code. We can also organize the flow to be a bit smoother. Here's a refined version:
 
-      def calculate_actions(characters, cycle_number):
-        """
-        Calculates the number of actions for each character in a list of dictionaries.
+```python
+def calculate_actions(characters, cycle_number):
+    """
+    Calculates the number of actions for each character in a list of dictionaries.
+
+    Args:
+        characters: A list of dictionaries, where each dictionary represents a character with the following keys:
+            - 'name': The character's name (string)
+            - 'speed': The character's speed (integer)
+            - 'leftover_action_points': The character's current action points (integer)
+        cycle_number: The current cycle number (integer)
+
+    Returns:
+        A list of dictionaries, where each dictionary represents a character with the following keys:
+            - 'name': The character's name (string)
+            - 'actions': The number of actions the character takes (integer)
+            - 'leftover_action_points': The character's current action points (integer)
+    """
+    results = []
+    for character in characters:
+        if cycle_number == 1:
+            total_action_points = character['speed']
+        else:
+            total_action_points = character['speed'] + character['leftover_action_points']
+        
+        raw_actions = total_action_points / 100
+        actions = int(raw_actions)  # Round down to whole actions
+        leftover_actions = raw_actions - actions
+        leftover_action_points = round(leftover_actions * 100, 1)
+
+        results.append({
+            'name': character['name'],
+            'actions': actions,
+            'leftover_action_points': leftover_action_points
+        })
     
-        Args:
-            characters: A list of dictionaries, where each dictionary represents a character with the following keys:
-                - 'name': The character's name (string)
-                - 'speed': The character's speed (integer)
-                - 'leftover_action_points': The character's current action points (integer)
-            cycle_number: The current cycle number (integer)
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters, cycle_number)
     
-        Returns:
-            A list of dictionaries, where each dictionary represents a character with the following keys:
-                - 'name': The character's name (string)
-                - 'actions': The number of actions the character takes (integer)
-                - 'leftover_action_points': The character's current action points (integer)
-        """
-        results = []
+    for result in action_results:
+        print(f"{result['name']} takes {result['actions']} actions.")
+        
+        # Update the leftover action points in the characters list
         for character in characters:
-            if cycle_number == 1:
-                total_action_points = character['speed']
-            else:
-                total_action_points = character['speed'] + character['leftover_action_points']
-            
-            raw_actions = total_action_points / 100
-            actions = int(raw_actions)  # Round down to whole actions
-            leftover_actions = raw_actions - actions
-            leftover_action_points = round(leftover_actions * 100, 1)
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
     
-            results.append({
-                'name': character['name'],
-                'actions': actions,
-                'leftover_action_points': leftover_action_points
-            })
-        
-        return results
-    
-        # Example usage:
-        characters = [
-          {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-          {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-          {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-        ]
-    
-        cycle_number = 1
-    
-        while True:
-          print(f"\nCycle {cycle_number}:")
-          action_results = calculate_actions(characters, cycle_number)
-        
-        for result in action_results:
-            print(f"{result['name']} takes {result['actions']} actions.")
-            
-            # Update the leftover action points in the characters list
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
-        
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
-  
-This refactor introduces cycle_number as a parameter to the function, allowing the calculation logic to be separated from the loop that handles the cycles. It also ensures that characters are updated correctly after each cycle. Looks good? Want to test it out or dive deeper into any part?
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
+
+This refactor introduces `cycle_number` as a parameter to the function, allowing the calculation logic to be separated from the loop that handles the cycles. It also ensures that characters are updated correctly after each cycle. Looks good? Want to test it out or dive deeper into any part?
 
 --------
 
@@ -261,70 +263,69 @@ Alright, Awesome! Tested it out and it runs well. I'd like to add the funtionali
 Perfect! I love the idea of adding a progress meter. Keeping track of each segment makes the combat system feel more dynamic and engaging.
 
 Let’s tackle it this way:
-
-Each cycle will have 100 segments.
-
-Characters gain speed/100 action points each segment.
-
-We can track when characters reach the action threshold and record the order of their actions.
+- Each cycle will have 100 segments.
+- Characters gain speed/100 action points each segment.
+- We can track when characters reach the action threshold and record the order of their actions.
 
 Here’s an updated version of the code to implement this progress meter:
 
-    def calculate_actions(characters):
-        results = []
-        cycle_length = 100
-    
-        for character in characters:
-            character['progress'] = 0
-    
-        segment_order = []  # To track action orders
-    
-        for segment in range(1, cycle_length + 1):
-            for character in characters:
-                character['progress'] += character['speed'] / cycle_length
-                
-                if character['progress'] >= 1:
-                    character['progress'] -= 1
-                    segment_order.append(character['name'])
-    
-        # Calculate final leftover action points and actions for display purposes
-        for character in characters:
-            actions_taken = segment_order.count(character['name'])
-            leftover_action_points = character['progress'] * cycle_length
-            results.append({
-                'name': character['name'],
-                'actions': actions_taken,
-                'leftover_action_points': leftover_action_points,
-                'action_order': [i + 1 for i, name in enumerate(segment_order) if name == character['name']]
-            })
-    
-        return results
+```python
+def calculate_actions(characters):
+    results = []
+    cycle_length = 100
 
-    # Example usage:
-    characters = [
-        {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-        {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-        {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-    ]
-    
-    cycle_number = 1
-    
-    while True:
-        print(f"\nCycle {cycle_number}:")
-        action_results = calculate_actions(characters)
-        
-        for result in action_results:
-            print(f"{result['name']} takes {result['actions']} actions. Order: {result['action_order']}")
+    for character in characters:
+        character['progress'] = 0
+
+    segment_order = []  # To track action orders
+
+    for segment in range(1, cycle_length + 1):
+        for character in characters:
+            character['progress'] += character['speed'] / cycle_length
             
-            # Update the leftover action points in the characters list
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
+            if character['progress'] >= 1:
+                character['progress'] -= 1
+                segment_order.append(character['name'])
+
+    # Calculate final leftover action points and actions for display purposes
+    for character in characters:
+        actions_taken = segment_order.count(character['name'])
+        leftover_action_points = character['progress'] * cycle_length
+        results.append({
+            'name': character['name'],
+            'actions': actions_taken,
+            'leftover_action_points': leftover_action_points,
+            'action_order': [i + 1 for i, name in enumerate(segment_order) if name == character['name']]
+        })
+
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters)
+    
+    for result in action_results:
+        print(f"{result['name']} takes {result['actions']} actions. Order: {result['action_order']}")
         
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
+        # Update the leftover action points in the characters list
+        for character in characters:
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
+    
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
 
 This tracks actions within each cycle, segment by segment. It also records the order in which each character takes their actions. Test it out and see if it meets your expectations!
 
@@ -340,63 +341,65 @@ I haven't tested this code yet but please make sure that, within each cycle, the
 
 Absolutely, let’s keep it clean. Here’s a streamlined version that only displays segments where actions occur:
 
-    def calculate_actions(characters):
-        results = []
-        cycle_length = 100
-    
+```python
+def calculate_actions(characters):
+    results = []
+    cycle_length = 100
+
+    for character in characters:
+        character['progress'] = 0
+
+    segment_order = []  # To track action orders
+
+    for segment in range(1, cycle_length + 1):
         for character in characters:
-            character['progress'] = 0
+            character['progress'] += character['speed'] / cycle_length
+            
+            if character['progress'] >= 1:
+                character['progress'] -= 1
+                segment_order.append((segment, character['name']))
+
+    # Calculate final leftover action points and actions for display purposes
+    for character in characters:
+        actions_taken = sum(1 for seg, name in segment_order if name == character['name'])
+        leftover_action_points = character['progress'] * cycle_length
+        action_segments = [seg for seg, name in segment_order if name == character['name']]
+        
+        results.append({
+            'name': character['name'],
+            'actions': actions_taken,
+            'leftover_action_points': leftover_action_points,
+            'action_order': action_segments
+        })
+
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters)
     
-        segment_order = []  # To track action orders
-    
-        for segment in range(1, cycle_length + 1):
-            for character in characters:
-                character['progress'] += character['speed'] / cycle_length
-                
-                if character['progress'] >= 1:
-                    character['progress'] -= 1
-                    segment_order.append((segment, character['name']))
-    
-        # Calculate final leftover action points and actions for display purposes
+    for result in action_results:
+        print(f"{result['name']} takes {result['actions']} actions at segments {result['action_order']}.")
+        
+        # Update the leftover action points in the characters list
         for character in characters:
-            actions_taken = sum(1 for seg, name in segment_order if name == character['name'])
-            leftover_action_points = character['progress'] * cycle_length
-            action_segments = [seg for seg, name in segment_order if name == character['name']]
-            
-            results.append({
-                'name': character['name'],
-                'actions': actions_taken,
-                'leftover_action_points': leftover_action_points,
-                'action_order': action_segments
-            })
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
     
-        return results
-    
-    # Example usage:
-    characters = [
-        {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-        {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-        {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-    ]
-    
-    cycle_number = 1
-    
-    while True:
-        print(f"\nCycle {cycle_number}:")
-        action_results = calculate_actions(characters)
-        
-        for result in action_results:
-            print(f"{result['name']} takes {result['actions']} actions at segments {result['action_order']}.")
-            
-            # Update the leftover action points in the characters list
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
-        
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
 
 This update ensures that only the segments with actions are printed, keeping the terminal output tidy. Give it a whirl!
 
@@ -417,68 +420,70 @@ def calculate_actions(characters, cycle_number): """ Calculates the number of ac
 
 Alright, here’s your original code with some refinements for readability and functionality:
 
-    def calculate_actions(characters, cycle_number):
-        """
-        Calculates the number of actions for each character in a list of dictionaries.
+```python
+def calculate_actions(characters, cycle_number):
+    """
+    Calculates the number of actions for each character in a list of dictionaries.
+
+    Args:
+        characters: A list of dictionaries, where each dictionary represents a character with the following keys:
+            - 'name': The character's name (string)
+            - 'speed': The character's speed (integer)
+            - 'leftover_action_points': The character's current action points (integer)
+        cycle_number: The current cycle number (integer)
+
+    Returns:
+        A list of dictionaries, where each dictionary represents a character with the following keys:
+            - 'name': The character's name (string)
+            - 'actions': The number of actions the character takes (integer)
+            - 'leftover_action_points': The character's current action points (integer)
+    """
+    results = []
+    for character in characters:
+        if cycle_number == 1:
+            total_action_points = character['speed']
+        else:
+            total_action_points = character['speed'] + character['leftover_action_points']
+        
+        raw_actions = total_action_points / 100
+        actions = int(raw_actions)  # Round down to whole actions
+        leftover_actions = raw_actions - actions
+        leftover_action_points = round(leftover_actions * 100, 1)
+
+        results.append({
+            'name': character['name'],
+            'actions': actions,
+            'leftover_action_points': leftover_action_points
+        })
     
-        Args:
-            characters: A list of dictionaries, where each dictionary represents a character with the following keys:
-                - 'name': The character's name (string)
-                - 'speed': The character's speed (integer)
-                - 'leftover_action_points': The character's current action points (integer)
-            cycle_number: The current cycle number (integer)
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters, cycle_number)
     
-        Returns:
-            A list of dictionaries, where each dictionary represents a character with the following keys:
-                - 'name': The character's name (string)
-                - 'actions': The number of actions the character takes (integer)
-                - 'leftover_action_points': The character's current action points (integer)
-        """
-        results = []
+    for result in action_results:
+        print(f"{result['name']} takes {result['actions']} actions.")
+        
+        # Update the leftover action points in the characters list
         for character in characters:
-            if cycle_number == 1:
-                total_action_points = character['speed']
-            else:
-                total_action_points = character['speed'] + character['leftover_action_points']
-            
-            raw_actions = total_action_points / 100
-            actions = int(raw_actions)  # Round down to whole actions
-            leftover_actions = raw_actions - actions
-            leftover_action_points = round(leftover_actions * 100, 1)
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
     
-            results.append({
-                'name': character['name'],
-                'actions': actions,
-                'leftover_action_points': leftover_action_points
-            })
-        
-        return results
-    
-    # Example usage:
-    characters = [
-        {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-        {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-        {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-    ]
-    
-    cycle_number = 1
-    
-    while True:
-        print(f"\nCycle {cycle_number}:")
-        action_results = calculate_actions(characters, cycle_number)
-        
-        for result in action_results:
-            print(f"{result['name']} takes {result['actions']} actions.")
-            
-            # Update the leftover action points in the characters list
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
-        
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
 
 This returns you to the previous structure and includes some cleanup to improve clarity. Let's iterate this further or integrate any new requirements you have in mind. What’s the next step?
 
@@ -513,66 +518,66 @@ Absolutely, I get it. You want to spread out the actions so characters don’t p
 Let’s adjust the system to account for actions being distributed evenly across the segments of a cycle. Here’s an updated approach:
 
 1. We'll calculate each character's action points per segment.
-
 2. Track which segments they act in based on accumulated action points.
-
 3. Spread out their actions evenly within the cycle.
 
 Here's a refined version of the code:
 
-    def calculate_actions(characters):
-        results = []
-        cycle_length = 100
-    
+```python
+def calculate_actions(characters):
+    results = []
+    cycle_length = 100
+
+    for character in characters:
+        character['progress'] = 0
+        character['action_segments'] = []
+
+    for segment in range(1, cycle_length + 1):
         for character in characters:
-            character['progress'] = 0
-            character['action_segments'] = []
-    
-        for segment in range(1, cycle_length + 1):
-            for character in characters:
-                character['progress'] += character['speed'] / cycle_length
-                
-                if character['progress'] >= 1:
-                    character['progress'] -= 1
-                    character['action_segments'].append(segment)
-    
-        for character in characters:
-            actions_taken = len(character['action_segments'])
-            leftover_action_points = character['progress'] * cycle_length
-    
-            results.append({
-                'name': character['name'],
-                'actions': actions_taken,
-                'leftover_action_points': leftover_action_points,
-                'action_segments': character['action_segments']
-            })
-    
-        return results
-    
-    # Example usage:
-    characters = [
-        {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-        {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-        {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-    ]
-    
-    cycle_number = 1
-    
-    while True:
-        print(f"\nCycle {cycle_number}:")
-        action_results = calculate_actions(characters)
-        
-        for result in action_results:
-            print(f"{result['name']} takes {result['actions']} actions at segments {result['action_segments']}.")
+            character['progress'] += character['speed'] / cycle_length
             
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
+            if character['progress'] >= 1:
+                character['progress'] -= 1
+                character['action_segments'].append(segment)
+
+    for character in characters:
+        actions_taken = len(character['action_segments'])
+        leftover_action_points = character['progress'] * cycle_length
+
+        results.append({
+            'name': character['name'],
+            'actions': actions_taken,
+            'leftover_action_points': leftover_action_points,
+            'action_segments': character['action_segments']
+        })
+
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters)
+    
+    for result in action_results:
+        print(f"{result['name']} takes {result['actions']} actions at segments {result['action_segments']}.")
         
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
+        for character in characters:
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
+    
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
 
 This will ensure that actions are spread out across the cycle based on speed, making the combat flow more naturally like a turn-based RPG. Give it a try and see how it feels!
 
@@ -594,61 +599,63 @@ Let's adjust the approach to better handle the increment and distribution of act
 
 Here’s a refined version to more accurately reflect how actions should be distributed within a cycle:
 
-    def calculate_actions(characters):
-        results = []
-        cycle_length = 100
-    
+```python
+def calculate_actions(characters):
+    results = []
+    cycle_length = 100
+
+    for character in characters:
+        character['progress'] = 0
+        character['action_segments'] = []
+
+    for segment in range(1, cycle_length + 1):
         for character in characters:
-            character['progress'] = 0
-            character['action_segments'] = []
-    
-        for segment in range(1, cycle_length + 1):
-            for character in characters:
-                character['progress'] += character['speed'] / cycle_length
-                
-                if character['progress'] >= 1:
-                    character['progress'] -= 1
-                    character['action_segments'].append(segment)
-    
-        # Calculate final leftover action points and actions for display purposes
-        for character in characters:
-            actions_taken = len(character['action_segments'])
-            leftover_action_points = character['progress'] * cycle_length
-    
-            results.append({
-                'name': character['name'],
-                'actions': actions_taken,
-                'leftover_action_points': leftover_action_points,
-                'action_segments': character['action_segments']
-            })
-    
-        return results
-    
-    # Example usage:
-    characters = [
-        {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
-        {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
-        {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
-    ]
-    
-    cycle_number = 1
-    
-    while True:
-        print(f"\nCycle {cycle_number}:")
-        action_results = calculate_actions(characters)
-        
-        for result in action_results:
-            if result['actions'] > 0:  # Only display segments where actions occur
-                print(f"{result['name']} takes {result['actions']} actions at segments {result['action_segments']}.")
+            character['progress'] += character['speed'] / cycle_length
             
-            for character in characters:
-                if character['name'] == result['name']:
-                    character['leftover_action_points'] = result['leftover_action_points']
+            if character['progress'] >= 1:
+                character['progress'] -= 1
+                character['action_segments'].append(segment)
+
+    # Calculate final leftover action points and actions for display purposes
+    for character in characters:
+        actions_taken = len(character['action_segments'])
+        leftover_action_points = character['progress'] * cycle_length
+
+        results.append({
+            'name': character['name'],
+            'actions': actions_taken,
+            'leftover_action_points': leftover_action_points,
+            'action_segments': character['action_segments']
+        })
+
+    return results
+
+# Example usage:
+characters = [
+    {'name': 'Character A', 'speed': 120, 'leftover_action_points': 0},
+    {'name': 'Character B', 'speed': 80, 'leftover_action_points': 0},
+    {'name': 'Character C', 'speed': 100, 'leftover_action_points': 0}
+]
+
+cycle_number = 1
+
+while True:
+    print(f"\nCycle {cycle_number}:")
+    action_results = calculate_actions(characters)
+    
+    for result in action_results:
+        if result['actions'] > 0:  # Only display segments where actions occur
+            print(f"{result['name']} takes {result['actions']} actions at segments {result['action_segments']}.")
         
-        cycle_number += 1
-        input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
-        if input_text.lower() != "next cycle":
-            break
+        for character in characters:
+            if character['name'] == result['name']:
+                character['leftover_action_points'] = result['leftover_action_points']
+    
+    cycle_number += 1
+    input_text = input("Type 'next cycle' to continue, or anything else to exit: ")
+    if input_text.lower() != "next cycle":
+        break
+```
 
 This ensures that only the segments with actions are printed, keeping the terminal output tidy. Try it out and let me know how it works!
 
@@ -667,42 +674,42 @@ Still not quite what I intended... We'll scratch that. Let's just make a turn-ba
 **Copilot:**
 
 Got it. A fresh start. Let's create a straightforward turn-based RPG system driven by speed. Here's the plan:
-
 1. Each character’s turn is determined by their speed.
-
 2. Characters with higher speed get to act more frequently.
 
 Let's sketch it out. We'll track initiative order and have characters act based on their speed:
 
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-    def simulate_turn_based_combat(characters, num_turns):
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        for _ in range(num_turns):
-            current_time, current_character = heapq.heappop(turn_queue)
-            print(f"{current_character.name} takes an action at time {current_time}")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-    
-    # Example usage:
-    characters = [
-        Character("Character A", 120),
-        Character("Character B", 80),
-        Character("Character C", 100)
-    ]
-    
-    simulate_turn_based_combat(characters, 10)
+```python
+import heapq
 
-   This script uses a priority queue to manage turn order based on speed. Characters with higher speeds act more frequently, and the time increments reflect their turn frequency. This way, each character's action timing is dynamically adjusted based on their speed. Run it and see the action unfold! Feel free to tweak the number of turns or add more characters. How does this look?
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+def simulate_turn_based_combat(characters, num_turns):
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    for _ in range(num_turns):
+        current_time, current_character = heapq.heappop(turn_queue)
+        print(f"{current_character.name} takes an action at time {current_time}")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+
+# Example usage:
+characters = [
+    Character("Character A", 120),
+    Character("Character B", 80),
+    Character("Character C", 100)
+]
+
+simulate_turn_based_combat(characters, 10)
+```
+
+This script uses a priority queue to manage turn order based on speed. Characters with higher speeds act more frequently, and the time increments reflect their turn frequency. This way, each character's action timing is dynamically adjusted based on their speed. Run it and see the action unfold! Feel free to tweak the number of turns or add more characters. How does this look?
 
    --------
 
@@ -718,38 +725,40 @@ Ah, that's because the heapq module relies on comparison operators to maintain t
 
 Let’s add a method to the Character class to handle the comparison:
 
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            return self.action_time < other.action_time
-    
-    def simulate_turn_based_combat(characters, num_turns):
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        for _ in range(num_turns):
-            current_time, current_character = heapq.heappop(turn_queue)
-            print(f"{current_character.name} takes an action at time {current_time}")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-    
-    # Example usage:
-    characters = [
-        Character("Character A", 120),
-        Character("Character B", 80),
-        Character("Character C", 100)
-    ]
-    
-    simulate_turn_based_combat(characters, 10)
+```python
+import heapq
 
-This adds the __lt__ method, which tells Python how to compare Characters based on their action_time. This should fix the error you encountered. Give it a try!
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        return self.action_time < other.action_time
+
+def simulate_turn_based_combat(characters, num_turns):
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    for _ in range(num_turns):
+        current_time, current_character = heapq.heappop(turn_queue)
+        print(f"{current_character.name} takes an action at time {current_time}")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+
+# Example usage:
+characters = [
+    Character("Character A", 120),
+    Character("Character B", 80),
+    Character("Character C", 100)
+]
+
+simulate_turn_based_combat(characters, 10)
+```
+
+This adds the `__lt__` method, which tells Python how to compare Characters based on their `action_time`. This should fix the error you encountered. Give it a try!
 
 --------
 
@@ -767,41 +776,43 @@ Seems good so far! Next, the code should ask me to type next to continue the sim
 
 Alright, let’s build that in so you can control the flow of the simulation. Here’s the updated code:
 
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            return self.action_time < other.action_time
-    
-    def simulate_turn_based_combat(characters):
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        while True:
-            current_time, current_character = heapq.heappop(turn_queue)
-            print(f"{current_character.name} takes an action at time {current_time}")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-            
-            input_text = input("Type 'next' to continue, or anything else to exit: ")
-            if input_text.lower() != "next":
-                print("Ending simulation.")
-                break
-    
-    # Example usage:
-    characters = [
-        Character("Character A", 120),
-        Character("Character B", 80),
-        Character("Character C", 100)
-    ]
-    
-    simulate_turn_based_combat(characters)
+```python
+import heapq
+
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        return self.action_time < other.action_time
+
+def simulate_turn_based_combat(characters):
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    while True:
+        current_time, current_character = heapq.heappop(turn_queue)
+        print(f"{current_character.name} takes an action at time {current_time}")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+        
+        input_text = input("Type 'next' to continue, or anything else to exit: ")
+        if input_text.lower() != "next":
+            print("Ending simulation.")
+            break
+
+# Example usage:
+characters = [
+    Character("Character A", 120),
+    Character("Character B", 80),
+    Character("Character C", 100)
+]
+
+simulate_turn_based_combat(characters)
+```
 
 This update introduces a loop that asks for user input after each action. If you type “next,” it continues to the next set of actions. Typing anything else will end the simulation. Give it a try and see how it feels now!
 
@@ -817,44 +828,46 @@ When multiple characters can take actions at the same time, it should prioritize
 
 Got it. Here’s the refined version, prioritizing characters with higher speed when they can act at the same time, plus adding Character D:
 
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            if self.action_time == other.action_time:
-                return self.speed > other.speed  # Higher speed goes first if action times are equal
-            return self.action_time < other.action_time
-    
-    def simulate_turn_based_combat(characters):
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        while True:
-            current_time, current_character = heapq.heappop(turn_queue)
-            print(f"{current_character.name} takes an action at time {current_time}")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-            
-            input_text = input("Type 'next' to continue, or anything else to exit: ")
-            if input_text.lower() != "next":
-                print("Ending simulation.")
-                break
-    
-    # Example usage:
-    characters = [
-        Character("Character A", 120),
-        Character("Character B", 80),
-        Character("Character C", 100),
-        Character("Character D", 200)  # New character added
-    ]
-    
-    simulate_turn_based_combat(characters)
+```python
+import heapq
+
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        if self.action_time == other.action_time:
+            return self.speed > other.speed  # Higher speed goes first if action times are equal
+        return self.action_time < other.action_time
+
+def simulate_turn_based_combat(characters):
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    while True:
+        current_time, current_character = heapq.heappop(turn_queue)
+        print(f"{current_character.name} takes an action at time {current_time}")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+        
+        input_text = input("Type 'next' to continue, or anything else to exit: ")
+        if input_text.lower() != "next":
+            print("Ending simulation.")
+            break
+
+# Example usage:
+characters = [
+    Character("Character A", 120),
+    Character("Character B", 80),
+    Character("Character C", 100),
+    Character("Character D", 200)  # New character added
+]
+
+simulate_turn_based_combat(characters)
+```
 
 With this update, if characters have the same action time, the one with the higher speed acts first. Give it a spin and see how it performs!
 
@@ -870,46 +883,48 @@ Hmm well I've just discovered an issue: If I type "next" wrong by accident the s
 
 Good catch! Adding a confirmation step to prevent accidental exits is a great idea. Here’s the updated code:
 
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            if self.action_time == other.action_time:
-                return self.speed > other.speed  # Higher speed goes first if action times are equal
-            return self.action_time < other.action_time
-    
-    def simulate_turn_based_combat(characters):
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        while True:
-            current_time, current_character = heapq.heappop(turn_queue)
-            print(f"{current_character.name} takes an action at time {current_time}")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-            
-            input_text = input("Type 'next' to continue, or anything else to exit: ")
-            if input_text.lower() != "next":
-                confirm_exit = input("Are you sure you want to exit? Type 'yes' to confirm or 'no' to continue: ")
-                if confirm_exit.lower() == "yes":
-                    print("Ending simulation.")
-                    break
-    
-    # Example usage:
-    characters = [
-        Character("Character A", 120),
-        Character("Character B", 80),
-        Character("Character C", 100),
-        Character("Character D", 200)  # New character added
-    ]
-    
-    simulate_turn_based_combat(characters)
+```python
+import heapq
+
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        if self.action_time == other.action_time:
+            return self.speed > other.speed  # Higher speed goes first if action times are equal
+        return self.action_time < other.action_time
+
+def simulate_turn_based_combat(characters):
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    while True:
+        current_time, current_character = heapq.heappop(turn_queue)
+        print(f"{current_character.name} takes an action at time {current_time}")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+        
+        input_text = input("Type 'next' to continue, or anything else to exit: ")
+        if input_text.lower() != "next":
+            confirm_exit = input("Are you sure you want to exit? Type 'yes' to confirm or 'no' to continue: ")
+            if confirm_exit.lower() == "yes":
+                print("Ending simulation.")
+                break
+
+# Example usage:
+characters = [
+    Character("Character A", 120),
+    Character("Character B", 80),
+    Character("Character C", 100),
+    Character("Character D", 200)  # New character added
+]
+
+simulate_turn_based_combat(characters)
+```
 
 Now, if you type anything other than “next,” the code will ask for confirmation before ending the simulation. This should help prevent any accidental exits. Try it out!
 
@@ -926,110 +941,111 @@ Excellent! Now how would I get a simple User Interface for this code? One where 
 Great! A simple User Interface (UI) can be built using Python's Tkinter library, which allows for the creation of basic graphical interfaces. Here’s how you can create a basic UI to add, delete, and update characters and their attributes:
 
 1. Install Tkinter (it's usually included with Python).
-
 2. Create a window with buttons and entry fields for adding, deleting, and updating characters.
 
 Here’s a starter example for your UI:
 
-    import tkinter as tk
-    from tkinter import messagebox
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            if self.action_time == other.action_time:
-                return self.speed > other.speed  # Higher speed goes first if action times are equal
-            return self.action_time < other.action_time
-    
-    characters = []
-    
-    def add_character():
-        name = entry_name.get()
-        speed = entry_speed.get()
-    
-        if not name or not speed:
-            messagebox.showerror("Error", "Please enter both name and speed.")
-            return
-    
-        try:
-            speed = int(speed)
-        except ValueError:
-            messagebox.showerror("Error", "Speed must be an integer.")
-            return
-    
-        characters.append(Character(name, speed))
-        listbox_characters.insert(tk.END, f"{name} (Speed: {speed})")
-        entry_name.delete(0, tk.END)
-        entry_speed.delete(0, tk.END)
-    
-    def delete_character():
-        selected_indices = listbox_characters.curselection()
-        for index in selected_indices[::-1]:
-            listbox_characters.delete(index)
-            del characters[index]
-    
-    def update_character():
-        selected_index = listbox_characters.curselection()
-        if not selected_index:
-            messagebox.showerror("Error", "Please select a character to update.")
-            return
-    
-        selected_index = selected_index[0]
-        name = entry_name.get()
-        speed = entry_speed.get()
-    
-        if not name or not speed:
-            messagebox.showerror("Error", "Please enter both name and speed.")
-            return
-    
-        try:
-            speed = int(speed)
-        except ValueError:
-            messagebox.showerror("Error", "Speed must be an integer.")
-            return
-    
-        characters[selected_index].name = name
-        characters[selected_index].speed = speed
-        listbox_characters.delete(selected_index)
-        listbox_characters.insert(selected_index, f"{name} (Speed: {speed})")
-        entry_name.delete(0, tk.END)
-        entry_speed.delete(0, tk.END)
-    
-    # Create the main window
-    window = tk.Tk()
-    window.title("Character Manager")
-    
-    frame = tk.Frame(window)
-    frame.pack(pady=10)
-    
-    label_name = tk.Label(frame, text="Name:")
-    label_name.grid(row=0, column=0, padx=5, pady=5)
-    entry_name = tk.Entry(frame)
-    entry_name.grid(row=0, column=1, padx=5, pady=5)
-    
-    label_speed = tk.Label(frame, text="Speed:")
-    label_speed.grid(row=1, column=0, padx=5, pady=5)
-    entry_speed = tk.Entry(frame)
-    entry_speed.grid(row=1, column=1, padx=5, pady=5)
-    
-    button_add = tk.Button(frame, text="Add Character", command=add_character)
-    button_add.grid(row=2, column=0, columnspan=2, pady=5)
-    
-    button_delete = tk.Button(frame, text="Delete Character", command=delete_character)
-    button_delete.grid(row=3, column=0, columnspan=2, pady=5)
-    
-    button_update = tk.Button(frame, text="Update Character", command=update_character)
-    button_update.grid(row=4, column=0, columnspan=2, pady=5)
-    
-    listbox_characters = tk.Listbox(window)
-    listbox_characters.pack(pady=10)
-    
-    window.mainloop()
+```python
+import tkinter as tk
+from tkinter import messagebox
+import heapq
+
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        if self.action_time == other.action_time:
+            return self.speed > other.speed  # Higher speed goes first if action times are equal
+        return self.action_time < other.action_time
+
+characters = []
+
+def add_character():
+    name = entry_name.get()
+    speed = entry_speed.get()
+
+    if not name or not speed:
+        messagebox.showerror("Error", "Please enter both name and speed.")
+        return
+
+    try:
+        speed = int(speed)
+    except ValueError:
+        messagebox.showerror("Error", "Speed must be an integer.")
+        return
+
+    characters.append(Character(name, speed))
+    listbox_characters.insert(tk.END, f"{name} (Speed: {speed})")
+    entry_name.delete(0, tk.END)
+    entry_speed.delete(0, tk.END)
+
+def delete_character():
+    selected_indices = listbox_characters.curselection()
+    for index in selected_indices[::-1]:
+        listbox_characters.delete(index)
+        del characters[index]
+
+def update_character():
+    selected_index = listbox_characters.curselection()
+    if not selected_index:
+        messagebox.showerror("Error", "Please select a character to update.")
+        return
+
+    selected_index = selected_index[0]
+    name = entry_name.get()
+    speed = entry_speed.get()
+
+    if not name or not speed:
+        messagebox.showerror("Error", "Please enter both name and speed.")
+        return
+
+    try:
+        speed = int(speed)
+    except ValueError:
+        messagebox.showerror("Error", "Speed must be an integer.")
+        return
+
+    characters[selected_index].name = name
+    characters[selected_index].speed = speed
+    listbox_characters.delete(selected_index)
+    listbox_characters.insert(selected_index, f"{name} (Speed: {speed})")
+    entry_name.delete(0, tk.END)
+    entry_speed.delete(0, tk.END)
+
+# Create the main window
+window = tk.Tk()
+window.title("Character Manager")
+
+frame = tk.Frame(window)
+frame.pack(pady=10)
+
+label_name = tk.Label(frame, text="Name:")
+label_name.grid(row=0, column=0, padx=5, pady=5)
+entry_name = tk.Entry(frame)
+entry_name.grid(row=0, column=1, padx=5, pady=5)
+
+label_speed = tk.Label(frame, text="Speed:")
+label_speed.grid(row=1, column=0, padx=5, pady=5)
+entry_speed = tk.Entry(frame)
+entry_speed.grid(row=1, column=1, padx=5, pady=5)
+
+button_add = tk.Button(frame, text="Add Character", command=add_character)
+button_add.grid(row=2, column=0, columnspan=2, pady=5)
+
+button_delete = tk.Button(frame, text="Delete Character", command=delete_character)
+button_delete.grid(row=3, column=0, columnspan=2, pady=5)
+
+button_update = tk.Button(frame, text="Update Character", command=update_character)
+button_update.grid(row=4, column=0, columnspan=2, pady=5)
+
+listbox_characters = tk.Listbox(window)
+listbox_characters.pack(pady=10)
+
+window.mainloop()
+```
 
 This code creates a basic UI with fields to input character names and speeds, and buttons to add, delete, and update characters. The listbox displays the current characters.
 
@@ -1072,140 +1088,140 @@ Alright awesome, now can we get all the features to the UI so that I don
 
 Totally! Let's enhance our UI to include all the features from our original code, like running the simulation and displaying turn orders. Here's an updated version:
 
-    import tkinter as tk
-    from tkinter import messagebox
-    import heapq
-    
-    class Character:
-        def __init__(self, name, speed):
-            self.name = name
-            self.speed = speed
-            self.action_time = 0
-    
-        def __lt__(self, other):
-            if self.action_time == other.action_time:
-                return self.speed > other.speed  # Higher speed goes first if action times are equal
-            return self.action_time < other.action_time
-    
-    characters = []
-    
-    def add_character():
-        name = entry_name.get()
-        speed = entry_speed.get()
-    
-        if not name or not speed:
-            messagebox.showerror("Error", "Please enter both name and speed.")
-            return
-    
-        try:
-            speed = int(speed)
-        except ValueError:
-            messagebox.showerror("Error", "Speed must be an integer.")
-            return
-    
-        characters.append(Character(name, speed))
-        listbox_characters.insert(tk.END, f"{name} (Speed: {speed})")
-        entry_name.delete(0, tk.END)
-        entry_speed.delete(0, tk.END)
-    
-    def delete_character():
-        selected_indices = listbox_characters.curselection()
-        for index in selected_indices[::-1]:
-            listbox_characters.delete(index)
-            del characters[index]
-    
-    def update_character():
-        selected_index = listbox_characters.curselection()
-        if not selected_index:
-            messagebox.showerror("Error", "Please select a character to update.")
-            return
-    
-        selected_index = selected_index[0]
-        name = entry_name.get()
-        speed = entry_speed.get()
-    
-        if not name or not speed:
-            messagebox.showerror("Error", "Please enter both name and speed.")
-            return
-    
-        try:
-            speed = int(speed)
-        except ValueError:
-            messagebox.showerror("Error", "Speed must be an integer.")
-            return
-    
-        characters[selected_index].name = name
-        characters[selected_index].speed = speed
-        listbox_characters.delete(selected_index)
-        listbox_characters.insert(selected_index, f"{name} (Speed: {speed})")
-        entry_name.delete(0, tk.END)
-        entry_speed.delete(0, tk.END)
-    
-    def simulate_turn_based_combat():
-        if not characters:
-            messagebox.showerror("Error", "No characters to simulate.")
-            return
-    
-        turn_queue = []
-        for character in characters:
-            heapq.heappush(turn_queue, (character.action_time, character))
-    
-        result_text.delete(1.0, tk.END)
-        while True:
-            current_time, current_character = heapq.heappop(turn_queue)
-            result_text.insert(tk.END, f"{current_character.name} takes an action at time {current_time:.2f}\n")
-            current_character.action_time += 100 / current_character.speed
-            heapq.heappush(turn_queue, (current_character.action_time, current_character))
-            
-            input_text = input("Type 'next' to continue, or anything else to exit: ")
-            if input_text.lower() != "next":
-                confirm_exit = input("Are you sure you want to exit? Type 'yes' to confirm or 'no' to continue: ")
-                if confirm_exit.lower() == "yes":
-                    print("Ending simulation.")
-                    break
-    
-    # Create the main window
-    window = tk.Tk()
-    window.title("Character Manager")
-    
-    frame = tk.Frame(window)
-    frame.pack(pady=10)
-    
-    label_name = tk.Label(frame, text="Name:")
-    label_name.grid(row=0, column=0, padx=5, pady=5)
-    entry_name = tk.Entry(frame)
-    entry_name.grid(row=0, column=1, padx=5, pady=5)
-    
-    label_speed = tk.Label(frame, text="Speed:")
-    label_speed.grid(row=1, column=0, padx=5, pady=5)
-    entry_speed = tk.Entry(frame)
-    entry_speed.grid(row=1, column=1, padx=5, pady=5)
-    
-    button_add = tk.Button(frame, text="Add Character", command=add_character)
-    button_add.grid(row=2, column=0, columnspan=2, pady=5)
-    
-    button_delete = tk.Button(frame, text="Delete Character", command=delete_character)
-    button_delete.grid(row=3, column=0, columnspan=2, pady=5)
-    
-    button_update = tk.Button(frame, text="Update Character", command=update_character)
-    button_update.grid(row=4, column=0, columnspan=2, pady=5)
-    
-    button_simulate = tk.Button(frame, text="Simulate Combat", command=simulate_turn_based_combat)
-    button_simulate.grid(row=5, column=0, columnspan=2, pady=5)
-    
-    listbox_characters = tk.Listbox(window)
-    listbox_characters.pack(pady=10)
-    
-    result_text = tk.Text(window, height=10)
-    result_text.pack(pady=10)
-    
-    window.mainloop()
+```python
+import tkinter as tk
+from tkinter import messagebox
+import heapq
+
+class Character:
+    def __init__(self, name, speed):
+        self.name = name
+        self.speed = speed
+        self.action_time = 0
+
+    def __lt__(self, other):
+        if self.action_time == other.action_time:
+            return self.speed > other.speed  # Higher speed goes first if action times are equal
+        return self.action_time < other.action_time
+
+characters = []
+
+def add_character():
+    name = entry_name.get()
+    speed = entry_speed.get()
+
+    if not name or not speed:
+        messagebox.showerror("Error", "Please enter both name and speed.")
+        return
+
+    try:
+        speed = int(speed)
+    except ValueError:
+        messagebox.showerror("Error", "Speed must be an integer.")
+        return
+
+    characters.append(Character(name, speed))
+    listbox_characters.insert(tk.END, f"{name} (Speed: {speed})")
+    entry_name.delete(0, tk.END)
+    entry_speed.delete(0, tk.END)
+
+def delete_character():
+    selected_indices = listbox_characters.curselection()
+    for index in selected_indices[::-1]:
+        listbox_characters.delete(index)
+        del characters[index]
+
+def update_character():
+    selected_index = listbox_characters.curselection()
+    if not selected_index:
+        messagebox.showerror("Error", "Please select a character to update.")
+        return
+
+    selected_index = selected_index[0]
+    name = entry_name.get()
+    speed = entry_speed.get()
+
+    if not name or not speed:
+        messagebox.showerror("Error", "Please enter both name and speed.")
+        return
+
+    try:
+        speed = int(speed)
+    except ValueError:
+        messagebox.showerror("Error", "Speed must be an integer.")
+        return
+
+    characters[selected_index].name = name
+    characters[selected_index].speed = speed
+    listbox_characters.delete(selected_index)
+    listbox_characters.insert(selected_index, f"{name} (Speed: {speed})")
+    entry_name.delete(0, tk.END)
+    entry_speed.delete(0, tk.END)
+
+def simulate_turn_based_combat():
+    if not characters:
+        messagebox.showerror("Error", "No characters to simulate.")
+        return
+
+    turn_queue = []
+    for character in characters:
+        heapq.heappush(turn_queue, (character.action_time, character))
+
+    result_text.delete(1.0, tk.END)
+    while True:
+        current_time, current_character = heapq.heappop(turn_queue)
+        result_text.insert(tk.END, f"{current_character.name} takes an action at time {current_time:.2f}\n")
+        current_character.action_time += 100 / current_character.speed
+        heapq.heappush(turn_queue, (current_character.action_time, current_character))
+        
+        input_text = input("Type 'next' to continue, or anything else to exit: ")
+        if input_text.lower() != "next":
+            confirm_exit = input("Are you sure you want to exit? Type 'yes' to confirm or 'no' to continue: ")
+            if confirm_exit.lower() == "yes":
+                print("Ending simulation.")
+                break
+
+# Create the main window
+window = tk.Tk()
+window.title("Character Manager")
+
+frame = tk.Frame(window)
+frame.pack(pady=10)
+
+label_name = tk.Label(frame, text="Name:")
+label_name.grid(row=0, column=0, padx=5, pady=5)
+entry_name = tk.Entry(frame)
+entry_name.grid(row=0, column=1, padx=5, pady=5)
+
+label_speed = tk.Label(frame, text="Speed:")
+label_speed.grid(row=1, column=0, padx=5, pady=5)
+entry_speed = tk.Entry(frame)
+entry_speed.grid(row=1, column=1, padx=5, pady=5)
+
+button_add = tk.Button(frame, text="Add Character", command=add_character)
+button_add.grid(row=2, column=0, columnspan=2, pady=5)
+
+button_delete = tk.Button(frame, text="Delete Character", command=delete_character)
+button_delete.grid(row=3, column=0, columnspan=2, pady=5)
+
+button_update = tk.Button(frame, text="Update Character", command=update_character)
+button_update.grid(row=4, column=0, columnspan=2, pady=5)
+
+button_simulate = tk.Button(frame, text="Simulate Combat", command=simulate_turn_based_combat)
+button_simulate.grid(row=5, column=0, columnspan=2, pady=5)
+
+listbox_characters = tk.Listbox(window)
+listbox_characters.pack(pady=10)
+
+result_text = tk.Text(window, height=10)
+result_text.pack(pady=10)
+
+window.mainloop()
+```
 
 This script includes:
-
-A text widget to display the simulation results.
-
-A button to start the simulation.
+- A text widget to display the simulation results.
+- A button to start the simulation.
 
 Now, you can add, delete, update characters, and run the simulation directly from the UI. Hope this looks good! Give it a try and tweak as needed.
 
