@@ -1388,4 +1388,4 @@ This keeps the simulation interactive and user-friendly. Let’s try it out!
 
 --------
 
-Note: The model went through several additional iterations to refine the idea and expand its functionality. At this stage, we’ve successfully demonstrated the use of plain language, structured approaches, and prompting techniques—particularly the "Soft Reset"—to achieve the desired outcomes from the model.
+### Note: The model went through several additional iterations to refine the idea and expand its functionality. At this stage, we’ve successfully demonstrated the use of plain language, structured approaches, and prompting techniques—particularly the "Soft Reset"—to achieve the desired outcomes from the model.
